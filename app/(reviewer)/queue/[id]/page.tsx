@@ -6,6 +6,7 @@ import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { Badge, Card, CardContent, CardHeader, PendingButton, StatusPill } from "@/components/ui";
 import { DecisionBar, FlagList } from "@/components/review";
+import { CommentThread } from "@/components/submission";
 import { requireUser } from "@/lib/supabase/auth";
 import { getSubmissionDetail, startReview } from "@/lib/actions/submissions";
 import type { SubmissionDetail } from "@/lib/types";
@@ -17,7 +18,7 @@ export default async function ReviewDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireUser(["reviewer", "admin"]);
+  const user = await requireUser(["reviewer", "admin"]);
   const { id } = await params;
 
   let detail: SubmissionDetail;
@@ -100,6 +101,12 @@ export default async function ReviewDetailPage({
                 </CardContent>
               </Card>
             ) : null}
+
+            <CommentThread
+              initialComments={detail.comments}
+              submissionId={detail.id}
+              userId={user.id}
+            />
           </section>
 
           {/* Right: AI context + decision */}
