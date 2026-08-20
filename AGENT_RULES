@@ -1,0 +1,12 @@
+REPOSITORY AGENT RULES
+
+1. The root README.md is the only Markdown document permitted in this repository.
+2. Never create, stage, or commit any other Markdown file. This includes AGENTS.md,
+   CLAUDE.md, status files, plans, setup guides, nested README files, and files
+   ending in .md, .mdx, .markdown, .mdown, or .mkd.
+3. Put durable project documentation in the root README.md. Put short technical
+   explanations next to the code they describe.
+4. Before staging or committing, run `npm run check:markdown` and remove every
+   reported file rather than ignoring it.
+5. Keep `agentRules: false` in next.config.ts so Next.js does not regenerate
+   AGENTS.md or CLAUDE.md during development.

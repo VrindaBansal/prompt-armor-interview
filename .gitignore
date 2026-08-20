@@ -14,12 +14,6 @@ next-env.d.ts
 .env.*.local
 supabase/.temp/
 
-# Local agent and planning instructions
-AGENTS.md
-CLAUDE.md
-SETUP.md
-execution-plan.md
-
 # Editors and operating systems
 .DS_Store
 *.log

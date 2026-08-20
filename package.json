@@ -3,11 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "npm run check:markdown",
     "dev": "next dev",
+    "prebuild": "npm run check:markdown",
     "build": "next build",
     "start": "next start",
+    "prelint": "npm run check:markdown",
     "lint": "eslint",
-    "seed": "node --env-file=.env.local seed/index.mjs"
+    "seed": "node --env-file=.env.local seed/index.mjs",
+    "check:markdown": "node scripts/check-markdown-policy.mjs",
+    "prepare": "node scripts/install-git-hooks.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

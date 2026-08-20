@@ -71,6 +71,9 @@ All demo accounts share the password in `SEED_DEMO_PASSWORD`.
 
 The seed creates 15 submissions across every status, mixing clearly-compliant
 and clearly-violating copy so the queue and dashboard are populated.
+It is idempotent for its reserved `c1ea…` fixture records: rerunning it refreshes
+the six demo users and those fixtures without deleting unrelated users or
+submissions.
 
 ---
 
@@ -210,6 +213,20 @@ Required env: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
 `SUPABASE_SERVICE_ROLE_KEY` (server-only), `OPENAI_API_KEY` (server-only),
 `NEXT_PUBLIC_SITE_URL`, and `SEED_DEMO_PASSWORD` for the seed. See
 `env.example`.
+
+## Repository policy for agents
+
+- The root `README.md` is the only Markdown document permitted in this
+  repository.
+- Never create, stage, or commit another `.md`, `.mdx`, `.markdown`, `.mdown`,
+  or `.mkd` file, including agent instructions, status files, plans, setup
+  guides, or nested READMEs.
+- Add durable documentation to this README and keep implementation-specific
+  explanations beside the relevant code.
+- Run `npm run check:markdown` before staging or committing. The same policy
+  runs automatically before development, linting, builds, and local commits.
+- Keep `agentRules: false` in `next.config.ts`; it prevents Next.js from
+  regenerating disallowed agent Markdown files.
 
 ## Deploy
 
