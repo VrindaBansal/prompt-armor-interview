@@ -1,10 +1,14 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { Button, Field } from "@/components/ui";
+import { getSessionUser, roleHome } from "@/lib/supabase/auth";
 
 export const metadata = { title: "Sign in | ClearPath" };
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+  const user = await getSessionUser();
+  if (user) redirect(roleHome(user.profile.role));
   const { error } = await searchParams;
 
   return (
@@ -20,7 +24,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <Field autoComplete="current-password" label="Password" minLength={8} name="password" required type="password" />
         <div className="flex items-center justify-between gap-4 text-sm">
           <label className="flex items-center gap-2 text-slate-600"><input className="size-4 rounded border-slate-300 accent-slate-950" name="remember" type="checkbox" /> Keep me signed in</label>
-          <Link className="font-semibold text-slate-800 underline decoration-slate-300 underline-offset-4 hover:decoration-slate-800" href="/forgot-password">Forgot password?</Link>
+          <Link className="font-semibold text-slate-800 underline decoration-slate-300 underline-offset-4 hover:decoration-slate-800" href="/auth/recover">Forgot password?</Link>
         </div>
         <Button className="mt-1 w-full" size="lg" type="submit">Sign in</Button>
       </form>

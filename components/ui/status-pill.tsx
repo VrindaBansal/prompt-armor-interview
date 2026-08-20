@@ -1,8 +1,7 @@
 import { Badge } from "./badge";
+import type { Status } from "@/lib/types";
 
-export type SubmissionStatus = "draft" | "pending_ai" | "ai_screened" | "in_review" | "approved" | "changes_requested" | "rejected";
-
-const statusMeta: Record<SubmissionStatus, { label: string; tone: "neutral" | "info" | "success" | "warning" | "danger" }> = {
+const statusMeta: Record<Status, { label: string; tone: "neutral" | "info" | "success" | "warning" | "danger" }> = {
   draft: { label: "Draft", tone: "neutral" },
   pending_ai: { label: "AI pending", tone: "warning" },
   ai_screened: { label: "AI screened", tone: "info" },
@@ -12,7 +11,7 @@ const statusMeta: Record<SubmissionStatus, { label: string; tone: "neutral" | "i
   rejected: { label: "Rejected", tone: "danger" },
 };
 
-export function StatusPill({ status }: { status: SubmissionStatus }) {
+export function StatusPill({ status }: { status: Status }) {
   const meta = statusMeta[status];
   return <Badge tone={meta.tone}>{meta.label}</Badge>;
 }

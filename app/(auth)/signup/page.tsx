@@ -1,10 +1,14 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { Button, Field } from "@/components/ui";
+import { getSessionUser, roleHome } from "@/lib/supabase/auth";
 
 export const metadata = { title: "Create account | ClearPath" };
 
 export default async function SignupPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+  const user = await getSessionUser();
+  if (user) redirect(roleHome(user.profile.role));
   const { error } = await searchParams;
 
   return (
