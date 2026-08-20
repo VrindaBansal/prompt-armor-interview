@@ -30,6 +30,12 @@ export default async function ReviewDetailPage({
   const fails = detail.ai_checks.filter((c) => c.verdict === "fail").length;
   const decidable = OPEN_STATUSES.has(detail.status);
 
+  // Concrete fixes to seed the changes-requested note: failing flags the
+  // reviewer has not overridden (agreed !== false) that carry a suggested fix.
+  const suggestedFixes = detail.ai_checks
+    .filter((c) => c.verdict === "fail" && c.agreed !== false && c.suggested_fix)
+    .map((c) => c.suggested_fix as string);
+
   async function claim() {
     "use server";
     await startReview(id);
@@ -123,7 +129,7 @@ export default async function ReviewDetailPage({
                         </Button>
                       </form>
                     ) : null}
-                    <DecisionBar submissionId={detail.id} />
+                    <DecisionBar submissionId={detail.id} suggestedFixes={suggestedFixes} />
                   </div>
                 ) : (
                   <p className="text-sm text-slate-600">
