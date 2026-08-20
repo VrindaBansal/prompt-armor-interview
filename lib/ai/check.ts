@@ -6,6 +6,8 @@
 // (upsert on (submission_id, rule_id)). Rules the model omitted or returned
 // garbage for default to a `needs_human` row, so a submission is never left
 // with an applicable rule that has no check.
+import 'server-only';
+
 import { createServiceClient } from '@/lib/supabase/service';
 import type { Rule, Submission } from '@/lib/types';
 import { selectApplicableRules } from './rules';
@@ -88,18 +90,20 @@ export async function runComplianceCheck(
   // cover to needs_human.
   const rows = applicable.map((rule) => {
     const r = byRuleId.get(rule.id);
+    const excerpt =
+      r?.excerpt && submission.content.includes(r.excerpt) ? r.excerpt : null;
     return {
       submission_id: submissionId,
       rule_id: rule.id,
       verdict: r?.verdict ?? ('needs_human' as const),
-      excerpt: r?.excerpt ?? null,
+      excerpt,
       explanation:
         r?.explanation ??
         'The model did not return a result for this rule; flagged for human review.',
       suggested_fix: r?.suggested_fix ?? null,
       confidence: r?.confidence ?? null,
-      // Preserve any prior human agreement by not overwriting it here: upsert
-      // omits `agreed`, so an existing value survives; new rows get null.
+      // A resubmission is new evidence, so prior human agreement must be reset.
+      agreed: null,
     };
   });
 

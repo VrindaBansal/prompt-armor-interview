@@ -20,8 +20,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       {error ? <div className="mt-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800" role="alert">{error}</div> : null}
 
       <form action="/auth/login" className="mt-8 grid gap-5" method="post">
-        <Field autoComplete="email" label="Work email" name="email" placeholder="name@company.com" required type="email" />
-        <Field autoComplete="current-password" label="Password" minLength={8} name="password" required type="password" />
+        <Field autoComplete="email" label="Work email" maxLength={320} name="email" placeholder="name@company.com" required type="email" />
+        <Field autoComplete="current-password" label="Password" maxLength={1024} name="password" required type="password" />
         <div className="flex items-center justify-between gap-4 text-sm">
           <label className="flex items-center gap-2 text-slate-600"><input className="size-4 rounded border-slate-300 accent-slate-950" name="remember" type="checkbox" /> Keep me signed in</label>
           <Link className="font-semibold text-slate-800 underline decoration-slate-300 underline-offset-4 hover:decoration-slate-800" href="/auth/recover">Forgot password?</Link>

@@ -24,10 +24,12 @@ export function stripCodeFences(raw: string): string {
   return (fence ? fence[1] : trimmed).trim();
 }
 
-function toStringOrNull(v: unknown): string | null {
+function toStringOrNull(v: unknown, maxLength: number): string | null {
   if (typeof v === 'string') {
     const t = v.trim();
-    return t.length > 0 && t.toLowerCase() !== 'null' ? t : null;
+    return t.length > 0 && t.toLowerCase() !== 'null'
+      ? t.slice(0, maxLength)
+      : null;
   }
   return null;
 }
@@ -43,7 +45,7 @@ function coerceResult(entry: unknown): ParsedResult | null {
   const e = entry as Record<string, unknown>;
 
   const rule_id = typeof e.rule_id === 'string' ? e.rule_id.trim() : '';
-  if (!rule_id) return null;
+  if (!rule_id || rule_id.length > 128) return null;
 
   const verdictRaw = typeof e.verdict === 'string' ? e.verdict.trim().toLowerCase() : '';
   const verdict = (VERDICTS as string[]).includes(verdictRaw)
@@ -51,14 +53,14 @@ function coerceResult(entry: unknown): ParsedResult | null {
     : 'needs_human'; // unknown verdict → route to a human, never silently pass
 
   const explanation =
-    toStringOrNull(e.explanation) ?? 'No explanation returned by the model.';
+    toStringOrNull(e.explanation, 2_000) ?? 'No explanation returned by the model.';
 
   return {
     rule_id,
     verdict,
-    excerpt: toStringOrNull(e.excerpt),
+    excerpt: toStringOrNull(e.excerpt, 2_000),
     explanation,
-    suggested_fix: toStringOrNull(e.suggested_fix),
+    suggested_fix: toStringOrNull(e.suggested_fix, 2_000),
     confidence: toConfidence(e.confidence),
   };
 }

@@ -2,14 +2,19 @@ import type { Role } from "@/lib/types";
 import { roleHome } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
 
-import { authRedirect, formValue } from "../utils";
+import { authRedirect, formValue, rawFormValue, rejectCrossOrigin } from "../utils";
 
 export async function POST(request: Request) {
+  const rejected = rejectCrossOrigin(request);
+  if (rejected) return rejected;
+
   const formData = await request.formData();
   const email = formValue(formData, "email");
-  const password = formValue(formData, "password");
+  const password = rawFormValue(formData, "password");
 
-  if (!email || !password) return authRedirect(request, "/login", "Enter your email and password.");
+  if (!email || email.length > 320 || !password || password.length > 1024) {
+    return authRedirect(request, "/login", "Enter your email and password.");
+  }
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });

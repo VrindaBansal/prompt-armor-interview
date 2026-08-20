@@ -1,7 +1,7 @@
 'use server';
 
-// Server actions implementing the review state machine (execution-plan.md §4.2,
-// §7 A2). Every mutating transition writes an audit_log row via writeAudit, so
+// Server actions implementing the review state machine. Every mutating
+// transition writes an audit_log row via writeAudit, so
 // no path bypasses the audit trail (C1).
 //
 // State machine:
@@ -10,10 +10,10 @@
 //   ai_screened ──startReview──▶ in_review
 //   in_review | ai_screened ──decideReview──▶ approved | changes_requested | rejected
 //
-// Reads/writes go through the RLS-scoped server client so a user can only touch
-// what their role permits. The one exception is the ai_screened transition and
-// the ai_checks write, which are system actions done with the service client
-// (a submitter's RLS grant does not cover a pending_ai → ai_screened update).
+// Authorization reads go through the RLS-scoped request client. Mutations use
+// the server-only service client only after explicit role, ownership, and state
+// checks, preventing direct browser database calls from bypassing the audit
+// trail or state machine.
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
@@ -39,6 +39,21 @@ const SEVERITY_RANK: Record<Severity, number> = {
   advisory: 1,
 };
 
+const CHANNELS = new Set(['ad', 'email', 'affiliate_landing', 'social']);
+const PRODUCTS = new Set(['personal_loan', 'credit_card', 'mortgage_prequal']);
+const DECISIONS = new Set<Decision>([
+  'approved',
+  'changes_requested',
+  'rejected',
+]);
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function requireId(value: unknown) {
+  if (typeof value !== 'string' || !UUID.test(value)) {
+    throw new Error('Invalid identifier');
+  }
+}
+
 async function requireSession() {
   const user = await getSessionUser();
   if (!user) throw new Error('Not authenticated');
@@ -50,16 +65,32 @@ export async function createSubmission(
   input: NewSubmission,
 ): Promise<Submission> {
   const user = await requireSession();
-  const supabase = await createClient();
+  if (user.profile.role !== 'submitter') throw new Error('Forbidden');
+  if (
+    !input ||
+    typeof input.title !== 'string' ||
+    input.title.trim().length === 0 ||
+    input.title.trim().length > 120 ||
+    typeof input.content !== 'string' ||
+    input.content.trim().length < 20 ||
+    input.content.trim().length > 12_000 ||
+    !CHANNELS.has(input.channel) ||
+    !PRODUCTS.has(input.product_type) ||
+    typeof input.is_affiliate !== 'boolean'
+  ) {
+    throw new Error('Invalid submission');
+  }
 
-  const { data, error } = await supabase
+  const service = createServiceClient();
+
+  const { data, error } = await service
     .from('submissions')
     .insert({
       submitter_id: user.id,
-      title: input.title,
+      title: input.title.trim(),
       channel: input.channel,
       product_type: input.product_type,
-      content: input.content,
+      content: input.content.trim(),
       is_affiliate: input.is_affiliate,
       status: 'draft',
     })
@@ -67,12 +98,17 @@ export async function createSubmission(
     .single<Submission>();
   if (error || !data) throw new Error(error?.message ?? 'createSubmission failed');
 
-  await writeAudit(supabase, {
-    submission_id: data.id,
-    actor_id: user.id,
-    action: 'create',
-    to_status: 'draft',
-  });
+  try {
+    await writeAudit({
+      submission_id: data.id,
+      actor_id: user.id,
+      action: 'create',
+      to_status: 'draft',
+    });
+  } catch (error) {
+    await service.from('submissions').delete().eq('id', data.id);
+    throw error;
+  }
 
   revalidatePath('/submissions');
   return data;
@@ -81,7 +117,9 @@ export async function createSubmission(
 // ── submitForReview ─────────────────────────────────────────────────────────
 // draft | changes_requested → pending_ai, run the AI check, → ai_screened.
 export async function submitForReview(submissionId: string): Promise<void> {
+  requireId(submissionId);
   const user = await requireSession();
+  if (user.profile.role !== 'submitter') throw new Error('Forbidden');
   const supabase = await createClient();
 
   const { data: current, error: readErr } = await supabase
@@ -90,48 +128,96 @@ export async function submitForReview(submissionId: string): Promise<void> {
     .eq('id', submissionId)
     .single<Pick<Submission, 'id' | 'status' | 'submitter_id'>>();
   if (readErr || !current) throw new Error('Submission not found');
+  if (current.submitter_id !== user.id) throw new Error('Forbidden');
   if (current.status !== 'draft' && current.status !== 'changes_requested') {
     throw new Error(`Cannot submit from status ${current.status}`);
   }
 
-  // Move to pending_ai as the user (RLS allows this from draft/changes_requested).
-  const { error: pendErr } = await supabase
+  const service = createServiceClient();
+  const { data: transitioned, error: pendErr } = await service
     .from('submissions')
     .update({ status: 'pending_ai' })
-    .eq('id', submissionId);
-  if (pendErr) throw new Error(pendErr.message);
+    .eq('id', submissionId)
+    .eq('submitter_id', user.id)
+    .eq('status', current.status)
+    .select('id')
+    .maybeSingle();
+  if (pendErr || !transitioned) {
+    throw new Error(pendErr?.message ?? 'Submission state changed; refresh and try again');
+  }
 
-  await writeAudit(supabase, {
-    submission_id: submissionId,
-    actor_id: user.id,
-    action: 'submit_for_review',
-    from_status: current.status,
-    to_status: 'pending_ai',
-  });
+  try {
+    await writeAudit({
+      submission_id: submissionId,
+      actor_id: user.id,
+      action: 'submit_for_review',
+      from_status: current.status,
+      to_status: 'pending_ai',
+    });
+  } catch (error) {
+    await service
+      .from('submissions')
+      .update({ status: current.status })
+      .eq('id', submissionId)
+      .eq('status', 'pending_ai');
+    throw error;
+  }
 
-  // Run the compliance check and flip to ai_screened as the system (service
-  // client): a submitter's RLS grant does not cover pending_ai → ai_screened.
-  const service = createServiceClient();
-  const summary = await runComplianceCheck(submissionId);
+  let summary: Awaited<ReturnType<typeof runComplianceCheck>>;
+  try {
+    summary = await runComplianceCheck(submissionId);
+  } catch (error) {
+    const { data: reverted } = await service
+      .from('submissions')
+      .update({ status: current.status })
+      .eq('id', submissionId)
+      .eq('status', 'pending_ai')
+      .select('id')
+      .maybeSingle();
+    if (reverted) {
+      await writeAudit({
+        submission_id: submissionId,
+        actor_id: user.id,
+        action: 'ai_screening_failed',
+        from_status: 'pending_ai',
+        to_status: current.status,
+      });
+    }
+    throw error;
+  }
 
-  const { error: screenErr } = await service
+  const { data: screened, error: screenErr } = await service
     .from('submissions')
     .update({ status: 'ai_screened' })
-    .eq('id', submissionId);
-  if (screenErr) throw new Error(screenErr.message);
+    .eq('id', submissionId)
+    .eq('status', 'pending_ai')
+    .select('id')
+    .maybeSingle();
+  if (screenErr || !screened) {
+    throw new Error(screenErr?.message ?? 'Submission state changed during screening');
+  }
 
-  await writeAudit(service, {
-    submission_id: submissionId,
-    actor_id: user.id,
-    action: 'ai_screened',
-    from_status: 'pending_ai',
-    to_status: 'ai_screened',
-    metadata: {
-      applicable_rules: summary.applicableRuleCount,
-      failures: summary.failures,
-      needs_human: summary.needsHuman,
-    },
-  });
+  try {
+    await writeAudit({
+      submission_id: submissionId,
+      actor_id: user.id,
+      action: 'ai_screened',
+      from_status: 'pending_ai',
+      to_status: 'ai_screened',
+      metadata: {
+        applicable_rules: summary.applicableRuleCount,
+        failures: summary.failures,
+        needs_human: summary.needsHuman,
+      },
+    });
+  } catch (error) {
+    await service
+      .from('submissions')
+      .update({ status: 'pending_ai' })
+      .eq('id', submissionId)
+      .eq('status', 'ai_screened');
+    throw error;
+  }
 
   revalidatePath('/submissions');
   revalidatePath('/queue');
@@ -141,6 +227,7 @@ export async function submitForReview(submissionId: string): Promise<void> {
 // Reviewer opens an item: ai_screened → in_review. Reviewer-only surface, not
 // part of the B-facing contract. No-op if already in_review.
 export async function startReview(submissionId: string): Promise<void> {
+  requireId(submissionId);
   const user = await requireSession();
   if (user.profile.role !== 'reviewer' && user.profile.role !== 'admin') {
     throw new Error('Forbidden');
@@ -154,19 +241,34 @@ export async function startReview(submissionId: string): Promise<void> {
     .single<Pick<Submission, 'status'>>();
   if (!current || current.status !== 'ai_screened') return;
 
-  const { error } = await supabase
+  const service = createServiceClient();
+  const { data: transitioned, error } = await service
     .from('submissions')
     .update({ status: 'in_review' })
-    .eq('id', submissionId);
-  if (error) throw new Error(error.message);
+    .eq('id', submissionId)
+    .eq('status', 'ai_screened')
+    .select('id')
+    .maybeSingle();
+  if (error || !transitioned) {
+    throw new Error(error?.message ?? 'Submission state changed; refresh and try again');
+  }
 
-  await writeAudit(supabase, {
-    submission_id: submissionId,
-    actor_id: user.id,
-    action: 'start_review',
-    from_status: 'ai_screened',
-    to_status: 'in_review',
-  });
+  try {
+    await writeAudit({
+      submission_id: submissionId,
+      actor_id: user.id,
+      action: 'start_review',
+      from_status: 'ai_screened',
+      to_status: 'in_review',
+    });
+  } catch (error) {
+    await service
+      .from('submissions')
+      .update({ status: 'ai_screened' })
+      .eq('id', submissionId)
+      .eq('status', 'in_review');
+    throw error;
+  }
 
   revalidatePath('/queue');
 }
@@ -177,9 +279,21 @@ export async function decideReview(
   decision: Decision,
   notes?: string,
 ): Promise<void> {
+  requireId(submissionId);
   const user = await requireSession();
   if (user.profile.role !== 'reviewer' && user.profile.role !== 'admin') {
     throw new Error('Forbidden');
+  }
+  if (!DECISIONS.has(decision)) throw new Error('Invalid decision');
+  if (notes !== undefined && typeof notes !== 'string') {
+    throw new Error('Invalid reviewer notes');
+  }
+  const trimmedNotes = notes?.trim() || null;
+  if (trimmedNotes && trimmedNotes.length > 4_000) {
+    throw new Error('Reviewer notes must be 4,000 characters or fewer');
+  }
+  if (decision === 'changes_requested' && !trimmedNotes) {
+    throw new Error('Reviewer notes are required when requesting changes');
   }
   const supabase = await createClient();
 
@@ -193,29 +307,55 @@ export async function decideReview(
     throw new Error(`Cannot decide from status ${current.status}`);
   }
 
-  // Record the review, then apply the decision as the new status.
-  const { error: revErr } = await supabase.from('reviews').insert({
-    submission_id: submissionId,
-    reviewer_id: user.id,
-    decision,
-    notes: notes ?? null,
-  });
-  if (revErr) throw new Error(revErr.message);
-
-  const { error: updErr } = await supabase
+  const service = createServiceClient();
+  const { data: transitioned, error: updErr } = await service
     .from('submissions')
     .update({ status: decision })
-    .eq('id', submissionId);
-  if (updErr) throw new Error(updErr.message);
+    .eq('id', submissionId)
+    .eq('status', current.status)
+    .select('id')
+    .maybeSingle();
+  if (updErr || !transitioned) {
+    throw new Error(updErr?.message ?? 'Submission state changed; refresh and try again');
+  }
 
-  await writeAudit(supabase, {
-    submission_id: submissionId,
-    actor_id: user.id,
-    action: 'decide',
-    from_status: current.status,
-    to_status: decision,
-    metadata: notes ? { notes } : {},
-  });
+  const { data: review, error: revErr } = await service
+    .from('reviews')
+    .insert({
+      submission_id: submissionId,
+      reviewer_id: user.id,
+      decision,
+      notes: trimmedNotes,
+    })
+    .select('id')
+    .single<{ id: string }>();
+  if (revErr || !review) {
+    await service
+      .from('submissions')
+      .update({ status: current.status })
+      .eq('id', submissionId)
+      .eq('status', decision);
+    throw new Error(revErr?.message ?? 'Failed to record review');
+  }
+
+  try {
+    await writeAudit({
+      submission_id: submissionId,
+      actor_id: user.id,
+      action: 'decide',
+      from_status: current.status,
+      to_status: decision,
+      metadata: trimmedNotes ? { notes: trimmedNotes } : {},
+    });
+  } catch (error) {
+    await service.from('reviews').delete().eq('id', review.id);
+    await service
+      .from('submissions')
+      .update({ status: current.status })
+      .eq('id', submissionId)
+      .eq('status', decision);
+    throw error;
+  }
 
   revalidatePath('/queue');
   revalidatePath('/submissions');
@@ -226,31 +366,41 @@ export async function setFlagAgreement(
   aiCheckId: string,
   agreed: boolean,
 ): Promise<void> {
+  requireId(aiCheckId);
   const user = await requireSession();
   if (user.profile.role !== 'reviewer' && user.profile.role !== 'admin') {
     throw new Error('Forbidden');
   }
+  if (typeof agreed !== 'boolean') throw new Error('Invalid agreement value');
   const supabase = await createClient();
 
   const { data: check, error: readErr } = await supabase
     .from('ai_checks')
-    .select('id, submission_id')
+    .select('id, submission_id, agreed')
     .eq('id', aiCheckId)
-    .single<{ id: string; submission_id: string }>();
+    .single<{ id: string; submission_id: string; agreed: boolean | null }>();
   if (readErr || !check) throw new Error('Flag not found');
 
-  const { error } = await supabase
+  const service = createServiceClient();
+  const { data: updated, error } = await service
     .from('ai_checks')
     .update({ agreed })
-    .eq('id', aiCheckId);
-  if (error) throw new Error(error.message);
+    .eq('id', aiCheckId)
+    .select('id')
+    .maybeSingle();
+  if (error || !updated) throw new Error(error?.message ?? 'Flag not found');
 
-  await writeAudit(supabase, {
-    submission_id: check.submission_id,
-    actor_id: user.id,
-    action: 'flag_agreement',
-    metadata: { ai_check_id: aiCheckId, agreed },
-  });
+  try {
+    await writeAudit({
+      submission_id: check.submission_id,
+      actor_id: user.id,
+      action: 'flag_agreement',
+      metadata: { ai_check_id: aiCheckId, agreed },
+    });
+  } catch (error) {
+    await service.from('ai_checks').update({ agreed: check.agreed }).eq('id', aiCheckId);
+    throw error;
+  }
 
   revalidatePath('/queue');
 }
@@ -260,24 +410,42 @@ export async function addComment(
   submissionId: string,
   body: string,
 ): Promise<Comment> {
+  requireId(submissionId);
+  if (typeof body !== 'string') throw new Error('Invalid comment');
   const user = await requireSession();
   const trimmed = body.trim();
   if (!trimmed) throw new Error('Comment cannot be empty');
+  if (trimmed.length > 2_000) {
+    throw new Error('Comments must be 2,000 characters or fewer');
+  }
 
   const supabase = await createClient();
-  const { data, error } = await supabase
+  const { data: visible } = await supabase
+    .from('submissions')
+    .select('id')
+    .eq('id', submissionId)
+    .maybeSingle();
+  if (!visible) throw new Error('Submission not found');
+
+  const service = createServiceClient();
+  const { data, error } = await service
     .from('comments')
     .insert({ submission_id: submissionId, author_id: user.id, body: trimmed })
     .select('*')
     .single<Comment>();
   if (error || !data) throw new Error(error?.message ?? 'addComment failed');
 
-  await writeAudit(supabase, {
-    submission_id: submissionId,
-    actor_id: user.id,
-    action: 'comment',
-    metadata: { comment_id: data.id },
-  });
+  try {
+    await writeAudit({
+      submission_id: submissionId,
+      actor_id: user.id,
+      action: 'comment',
+      metadata: { comment_id: data.id },
+    });
+  } catch (error) {
+    await service.from('comments').delete().eq('id', data.id);
+    throw error;
+  }
 
   revalidatePath('/submissions');
   revalidatePath('/queue');
@@ -347,6 +515,7 @@ export async function listQueue(): Promise<SubmissionWithFlags[]> {
 
 // ── getSubmissionDetail ─────────────────────────────────────────────────────
 export async function getSubmissionDetail(id: string): Promise<SubmissionDetail> {
+  requireId(id);
   await requireSession();
   const supabase = await createClient();
 

@@ -10,8 +10,12 @@ next-env.d.ts
 .vercel
 
 # Local environment and service state
+.env
+.env.*
 .env.local
 .env.*.local
+*.key
+*.pem
 supabase/.temp/
 
 # Editors and operating systems

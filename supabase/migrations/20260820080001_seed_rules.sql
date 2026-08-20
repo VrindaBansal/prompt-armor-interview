@@ -1,4 +1,4 @@
--- ClearPath ruleset seed (execution-plan.md §6 P0.3, design §8.2).
+-- ClearPath regulatory ruleset seed.
 -- 14 compliance rules across TILA, UDAAP, and FTC endorsement guidance,
 -- scoped by channel and product_type. These are reference data the AI engine
 -- (A1) selects from per submission. Idempotent: safe to re-run (on conflict
