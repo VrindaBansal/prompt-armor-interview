@@ -82,10 +82,13 @@ submissions.
 - **Next.js (App Router) + TypeScript** — server components and server actions
   keep data access and the state machine on the server, next to the database,
   behind one type contract shared by every surface.
-- **Supabase (Postgres + Auth + Row-Level Security)** — RLS is the security
-  boundary, enforced in the database rather than in app code, so role scoping
-  holds regardless of which surface calls in. Auth, Postgres, and realtime come
-  from one service.
+- **Supabase (Postgres + Auth + Row-Level Security)** — security is
+  **defense-in-depth in the database**: RLS scopes every read by role, database
+  grants deny browser roles direct writes to the workflow tables, and mutations
+  go through server actions that verify role, ownership, input, and expected
+  state before performing the trusted write. So access control holds regardless
+  of which surface calls in — it isn't re-implemented per surface. Auth,
+  Postgres, and realtime come from one service.
 - **OpenAI** from a **server-only action** — the model is never called from the
   browser; the API key never leaves the server.
 - **Tailwind** for a restrained, consistent "regulatory dossier" UI.

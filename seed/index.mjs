@@ -103,6 +103,10 @@ await requireData(supabase.from("submissions").insert(submissions), "insert demo
 
 const rules = await requireData(supabase.from("rules").select("id, code"), "load rules");
 const ruleIds = new Map(rules.map((rule) => [rule.code, rule.id]));
+// Reviewer confirm/override on flags of reviewed submissions (true = confirmed
+// the AI flag, false = overrode). Yields a realistic AI-agreement rate on the
+// dashboard instead of 0%. Unreviewed items stay null (not yet acted on).
+const flagAgreementBySuffix = { "05": true, "08": true, "13": true, "14": false };
 const aiChecks = [];
 for (const submission of submissions) {
   if (submission.status === "draft") continue;
@@ -110,7 +114,7 @@ for (const submission of submissions) {
   const issue = issueBySubmission[suffix];
   if (issue) {
     const [code, excerpt, explanation, suggestedFix] = issue;
-    aiChecks.push({ submission_id: submission.id, rule_id: ruleIds.get(code), verdict: "fail", excerpt, explanation, suggested_fix: suggestedFix, confidence: 0.94, agreed: submission.status === "approved" ? false : null, created_at: submission.updated_at });
+    aiChecks.push({ submission_id: submission.id, rule_id: ruleIds.get(code), verdict: "fail", excerpt, explanation, suggested_fix: suggestedFix, confidence: 0.94, agreed: flagAgreementBySuffix[suffix] ?? null, created_at: submission.updated_at });
   }
   const passCode = issue?.[0] === "UDAAP-FINE-PRINT" ? "TILA-NO-RATE-COMMITMENT" : "UDAAP-FINE-PRINT";
   aiChecks.push({ submission_id: submission.id, rule_id: ruleIds.get(passCode), verdict: "pass", excerpt: null, explanation: "No conflicting or obscured material condition was identified in this fixture.", suggested_fix: null, confidence: 0.91, agreed: null, created_at: submission.updated_at });
