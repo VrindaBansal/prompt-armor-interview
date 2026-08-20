@@ -6,21 +6,11 @@ import { useRouter } from "next/navigation";
 
 import type { Comment } from "@/lib/types";
 import { createClient } from "@/lib/supabase/client";
-import { Button, Card, CardContent, CardHeader, EmptyState } from "@/components/ui";
+import { Button, Card, CardContent, CardHeader, EmptyState, LocalDateTime } from "@/components/ui";
 import type { CommentActionState } from "@/app/(submitter)/submissions/[id]/actions";
 import { addSubmissionCommentAction } from "@/app/(submitter)/submissions/[id]/actions";
 
 const initialState: CommentActionState = { error: null, success: false };
-const dateFormatter = new Intl.DateTimeFormat("en-US", {
-  year: "numeric",
-  month: "short",
-  day: "numeric",
-  hour: "numeric",
-  minute: "2-digit",
-  timeZone: "UTC",
-  timeZoneName: "short",
-});
-
 function PostButton() {
   const { pending } = useFormStatus();
   return <Button disabled={pending} type="submit">{pending ? "Posting…" : "Post comment"}</Button>;
@@ -67,7 +57,7 @@ export function CommentThread({ initialComments, submissionId, userId }: { initi
                 <li className={`relative border-l-2 pl-5 ${own ? "border-slate-950" : "border-amber-500"}`} key={comment.id}>
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
                     <p className="text-sm font-semibold text-slate-950">{own ? "You" : "Reviewer"}</p>
-                    <time className="text-[11px] uppercase tracking-[0.08em] text-slate-400" dateTime={comment.created_at}>{dateFormatter.format(new Date(comment.created_at))}</time>
+                    <LocalDateTime className="text-[11px] uppercase tracking-[0.08em] text-slate-400" value={comment.created_at} />
                   </div>
                   <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">{comment.body}</p>
                 </li>
