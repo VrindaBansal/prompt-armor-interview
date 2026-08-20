@@ -16,7 +16,12 @@ export async function POST(request: Request) {
   }
 
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: fullName } } });
+  const emailRedirectTo = new URL("/auth/callback", request.url).toString();
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { full_name: fullName }, emailRedirectTo },
+  });
   if (error) return authRedirect(request, "/signup", "We could not create that account. Try another email or contact support.");
   if (!data.session || !data.user) return authRedirect(request, "/login", "Check your email to confirm your account, then sign in.");
 
