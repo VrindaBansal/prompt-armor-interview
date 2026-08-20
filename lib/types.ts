@@ -49,7 +49,17 @@ export interface Rule {
   description: string;
   applies_to_channels: Channel[];
   applies_to_product_types: ProductType[];
+  is_active: boolean;
   created_at: string;
+}
+
+export interface NewRule {
+  code: string;
+  regulation: Regulation;
+  severity: Severity;
+  description: string;
+  applies_to_channels: Channel[];
+  applies_to_product_types: ProductType[];
 }
 
 export interface AiCheck {

@@ -53,12 +53,20 @@ export default async function DashboardShellPage() {
               the compliance review pipeline.
             </p>
           </div>
-          <Link
-            href="/queue"
-            className="inline-flex min-h-11 items-center justify-center rounded-md bg-slate-950 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
-          >
-            Open review queue
-          </Link>
+          <div className="flex gap-3">
+            <Link
+              href="/rules"
+              className="inline-flex min-h-11 items-center justify-center rounded-md border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-900 transition hover:border-slate-400 hover:bg-slate-50"
+            >
+              Manage rules
+            </Link>
+            <Link
+              href="/queue"
+              className="inline-flex min-h-11 items-center justify-center rounded-md bg-slate-950 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+            >
+              Open review queue
+            </Link>
+          </div>
         </header>
 
         <section aria-label="Throughput metrics" className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

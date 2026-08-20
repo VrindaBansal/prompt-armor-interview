@@ -173,14 +173,18 @@ action bypasses the trail.
 | 10 | Per-flag confirm / override | L2 / C1 |
 | 11 | Suggested fixes into the changes note | L2 |
 | 12 | Throughput dashboard | proof of impact |
+| 13 | Rules management (admin CRUD + activate/deactivate) | L2 |
 | — | Append-only audit trail | C1 |
 
 ---
 
 ## Scope decisions
 
-- **Rules are seeded reference data**, not a management UI. A rules-admin
-  screen was scoped out as a stretch; the engine reads the seeded ruleset.
+- **Rules are data, not code.** The ruleset ships as a seed migration, and an
+  admin can manage it in-app (add / edit / activate / deactivate) — deactivated
+  rules stop screening immediately and new rules apply to the next submission,
+  with no redeploy. Rule-change history is not yet audited (the audit log is
+  submission-scoped) — a natural next step.
 - **AI writes advisory flags, never decisions.** The AI never changes a
   submission's status — only a human reviewer decides. This keeps the
   compliance record human-owned.
