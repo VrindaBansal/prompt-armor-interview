@@ -1,5 +1,0 @@
-import { Spinner } from "@/components/ui";
-
-export default function AuthLoading() {
-  return <div className="flex min-h-48 items-center justify-center"><Spinner label="Loading account" /></div>;
-}

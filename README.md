@@ -77,25 +77,6 @@ submissions.
 
 ---
 
-## Five-minute demo
-
-1. Sign in as `alex.submitter@clearpath.demo`, create an affiliate landing-page
-   submission for a personal loan, and submit deliberately risky copy such as
-   “Guaranteed approval—4.9% with no fees.” The item should move from AI
-   screening to `ai_screened`.
-2. Sign in as `maya.reviewer@clearpath.demo`, open the highest-severity queue
-   item, inspect the cited excerpts and suggested fixes, confirm or override a
-   flag, then request changes. This demonstrates that AI performs the first
-   pass while the reviewer owns the decision.
-3. Sign in as `admin@clearpath.demo`, verify the throughput dashboard, then open
-   **Manage rules**. Add or edit a rule and toggle it inactive; inactive rules
-   remain visible for history but are excluded from the next AI screening.
-
-If the live model call is slow, use a pre-seeded flagged item. If the queue or
-dashboard is empty, run `npm run seed` against a non-production environment.
-
----
-
 ## Stack and why
 
 - **Next.js (App Router) + TypeScript** — server components and server actions
@@ -223,7 +204,7 @@ action bypasses the trail.
 ## Local setup
 
 ```bash
-nvm use                           # Node 22+
+# Node 22+
 npm install
 cp env.example .env.local          # fill in real values
 
@@ -254,19 +235,10 @@ logs, an issue, or a commit, rotate it immediately—removing the text is not
 enough. Configure provider spend/rate limits and review staff-role assignments
 before launch.
 
-## Repository policy for agents
+## Repository policy
 
-- The root `README.md` is the only Markdown document permitted in this
-  repository.
-- Never create, stage, or commit another `.md`, `.mdx`, `.markdown`, `.mdown`,
-  or `.mkd` file, including agent instructions, status files, plans, setup
-  guides, or nested READMEs.
-- Add durable documentation to this README and keep implementation-specific
-  explanations beside the relevant code.
-- Run `npm run check:markdown` before staging or committing. The same policy
-  runs automatically before development, linting, builds, and local commits.
-- Keep `agentRules: false` in `next.config.ts`; it prevents Next.js from
-  regenerating disallowed agent Markdown files.
+`README.md` is the repository's only Markdown document. Keep durable project
+documentation here and implementation details beside the relevant code.
 
 ## Deploy
 
