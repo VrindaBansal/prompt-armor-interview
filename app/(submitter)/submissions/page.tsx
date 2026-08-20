@@ -30,7 +30,7 @@ export default async function SubmissionsPage({ searchParams }: { searchParams: 
           <Link className="inline-flex min-h-12 items-center justify-center rounded-md bg-slate-950 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800" href="/submissions/new">New submission</Link>
         </header>
 
-        {params.created ? <div className="mt-6 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800" role="status">{params.created === "submitted" ? "Submission sent for AI screening." : "Draft saved successfully."}</div> : null}
+        {params.created ? <div className={`mt-6 rounded-md border px-4 py-3 text-sm font-medium ${params.created === "screening_failed" ? "border-amber-200 bg-amber-50 text-amber-900" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`} role="status">{params.created === "submitted" ? "Submission screened and sent to the review queue." : params.created === "screening_failed" ? "Your draft was saved, but AI screening could not start. Try submitting it again shortly." : "Draft saved successfully."}</div> : null}
 
         <section aria-label="Submission summary" className="grid grid-cols-3 border-b border-slate-900/10 py-7">
           <div><p className="text-2xl font-semibold tracking-tight">{submissions.length}</p><p className="mt-1 text-xs uppercase tracking-[0.1em] text-slate-500">Total</p></div>

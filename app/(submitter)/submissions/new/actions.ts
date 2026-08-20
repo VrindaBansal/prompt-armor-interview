@@ -30,9 +30,16 @@ export async function createSubmissionAction(formData: FormData) {
   try {
     const submission = await createSubmission(input);
     submissionId = submission.id;
-    if (intent === "submit") await submitForReview(submission.id);
   } catch {
     redirect("/submissions/new?error=The+submission+service+is+temporarily+unavailable.+Your+work+was+not+saved.");
+  }
+
+  if (intent === "submit") {
+    try {
+      await submitForReview(submissionId);
+    } catch {
+      redirect(`/submissions?created=screening_failed&id=${submissionId}`);
+    }
   }
 
   revalidatePath("/submissions");
