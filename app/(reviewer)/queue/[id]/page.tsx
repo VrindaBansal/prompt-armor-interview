@@ -4,7 +4,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
-import { Badge, Button, Card, CardContent, CardHeader, StatusPill } from "@/components/ui";
+import { Badge, Card, CardContent, CardHeader, PendingButton, StatusPill } from "@/components/ui";
 import { DecisionBar, FlagList } from "@/components/review";
 import { requireUser } from "@/lib/supabase/auth";
 import { getSubmissionDetail, startReview } from "@/lib/actions/submissions";
@@ -50,11 +50,11 @@ export default async function ReviewDetailPage({
         </Link>
 
         <header className="mt-4 flex flex-col gap-4 border-b border-slate-900/10 pb-7 sm:flex-row sm:items-end sm:justify-between">
-          <div>
+          <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-amber-700">
               Review detail
             </p>
-            <h1 className="mt-3 text-3xl font-semibold tracking-[-0.03em]">{detail.title}</h1>
+            <h1 className="mt-3 break-words text-3xl font-semibold tracking-[-0.03em]">{detail.title}</h1>
             <p className="mt-2 text-sm text-slate-600">
               {detail.submitter_name ?? "Unknown submitter"} · {detail.channel} ·{" "}
               {detail.product_type}
@@ -124,9 +124,9 @@ export default async function ReviewDetailPage({
                   <div className="grid gap-4">
                     {detail.status === "ai_screened" ? (
                       <form action={claim}>
-                        <Button variant="ghost" size="sm" type="submit">
+                        <PendingButton pendingLabel="Updating…" variant="ghost" size="sm" type="submit">
                           Mark as in review
-                        </Button>
+                        </PendingButton>
                       </form>
                     ) : null}
                     <DecisionBar submissionId={detail.id} suggestedFixes={suggestedFixes} />

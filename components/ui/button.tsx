@@ -27,6 +27,7 @@ const sizes: Record<ButtonSize, string> = {
 export function Button({ className, children, disabled, loading = false, size = "md", type = "button", variant = "primary", ...props }: ButtonProps) {
   return (
     <button
+      aria-busy={loading || undefined}
       className={cn("inline-flex items-center justify-center gap-2 rounded-md font-semibold tracking-[0.01em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50", variants[variant], sizes[size], className)}
       disabled={disabled || loading}
       type={type}

@@ -1,4 +1,4 @@
-import { Button, Field } from "@/components/ui";
+import { Field, PendingButton } from "@/components/ui";
 
 export const metadata = { title: "Choose a new password | ClearPath" };
 
@@ -13,7 +13,7 @@ export default async function UpdatePasswordPage({ searchParams }: { searchParam
       <form action="/auth/update-password" className="mt-8 grid gap-5" method="post">
         <Field autoComplete="new-password" label="New password" minLength={8} name="password" required type="password" />
         <Field autoComplete="new-password" label="Confirm new password" minLength={8} name="password_confirmation" required type="password" />
-        <Button className="w-full" size="lg" type="submit">Update password</Button>
+        <PendingButton className="w-full" pendingLabel="Updating password…" size="lg" type="submit">Update password</PendingButton>
       </form>
     </div>
   );

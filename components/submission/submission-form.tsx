@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { Button, Card, CardContent, CardFooter, CardHeader, Field, Select, TextArea } from "@/components/ui";
+import { Card, CardContent, CardFooter, CardHeader, Field, PendingButton, Select, TextArea } from "@/components/ui";
 
 export function SubmissionForm({ action, error }: { action: (formData: FormData) => void | Promise<void>; error?: string }) {
   return (
@@ -40,8 +40,8 @@ export function SubmissionForm({ action, error }: { action: (formData: FormData)
         <CardFooter className="flex-col-reverse justify-between gap-3 bg-slate-50/70 sm:flex-row">
           <Link className="inline-flex min-h-10 items-center justify-center px-2 text-sm font-semibold text-slate-600 hover:text-slate-950" href="/submissions">Cancel</Link>
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-            <Button className="w-full sm:w-auto" name="intent" type="submit" value="draft" variant="secondary">Save draft</Button>
-            <Button className="w-full sm:w-auto" name="intent" type="submit" value="submit">Submit for AI review</Button>
+            <PendingButton className="w-full sm:w-auto" name="intent" pendingLabel="Saving…" type="submit" value="draft" variant="secondary">Save draft</PendingButton>
+            <PendingButton className="w-full sm:w-auto" name="intent" pendingLabel="Screening…" type="submit" value="submit">Submit for AI review</PendingButton>
           </div>
         </CardFooter>
       </Card>

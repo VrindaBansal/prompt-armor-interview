@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { Button, Field } from "@/components/ui";
+import { Field, PendingButton } from "@/components/ui";
 import { getSessionUser, roleHome } from "@/lib/supabase/auth";
 
 export const metadata = { title: "Sign in | ClearPath" };
@@ -26,7 +26,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <label className="flex items-center gap-2 text-slate-600"><input className="size-4 rounded border-slate-300 accent-slate-950" name="remember" type="checkbox" /> Keep me signed in</label>
           <Link className="font-semibold text-slate-800 underline decoration-slate-300 underline-offset-4 hover:decoration-slate-800" href="/auth/recover">Forgot password?</Link>
         </div>
-        <Button className="mt-1 w-full" size="lg" type="submit">Sign in</Button>
+        <PendingButton className="mt-1 w-full" pendingLabel="Signing in…" size="lg" type="submit">Sign in</PendingButton>
       </form>
 
       <p className="mt-8 text-center text-sm text-slate-600">New to ClearPath? <Link className="font-semibold text-slate-950 underline decoration-amber-500 decoration-2 underline-offset-4" href="/signup">Create an account</Link></p>

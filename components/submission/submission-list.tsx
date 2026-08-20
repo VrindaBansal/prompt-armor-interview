@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import type { Channel, ProductType, Submission } from "@/lib/types";
 import { Card, CardContent, EmptyState, StatusPill } from "@/components/ui";
 
@@ -45,4 +47,3 @@ export function SubmissionList({ submissions }: { submissions: Submission[] }) {
     </div>
   );
 }
-import Link from "next/link";

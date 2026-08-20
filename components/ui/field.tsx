@@ -19,7 +19,7 @@ function FieldShell({ children, error, hint, label, name, required }: FieldShell
         {label}{required ? <span className="ml-1 text-red-700" aria-hidden>*</span> : null}
       </label>
       {children}
-      {error || hint ? <p className={cn("text-xs leading-5", error ? "font-medium text-red-700" : "text-slate-500")} id={descriptionId}>{error || hint}</p> : null}
+      {error || hint ? <p className={cn("text-xs leading-5", error ? "font-medium text-red-700" : "text-slate-500")} id={descriptionId} role={error ? "alert" : undefined}>{error || hint}</p> : null}
     </div>
   );
 }
