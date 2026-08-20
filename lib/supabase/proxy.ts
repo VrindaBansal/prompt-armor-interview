@@ -1,7 +1,8 @@
-// Session-refresh helper used by the root middleware. Keeps the auth cookies
-// fresh on every request and centralizes the redirect rule for unauthenticated
-// users. Route/role guards live in the (reviewer)/(admin)/(submitter) layouts
-// (Agent B); this only enforces "must be signed in" outside the auth pages.
+// Session-refresh helper used by the root proxy (proxy.ts). Keeps the auth
+// cookies fresh on every request and centralizes the redirect rule for
+// unauthenticated users. Route/role guards live in the
+// (reviewer)/(admin)/(submitter) layouts (Agent B); this only enforces "must be
+// signed in" outside the auth pages.
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
