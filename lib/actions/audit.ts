@@ -2,10 +2,9 @@
 // audit_log is never bypassed. from_status/to_status are set only for real
 // state transitions; other actions (comment, flag_agreement) leave them null.
 //
-// The caller passes whichever Supabase client it is already using: a
-// request-bound server client (RLS: actor_id must equal auth.uid()) or the
-// service client (trusted system transitions like ai_screened).
-import type { SupabaseClient } from '@supabase/supabase-js';
+import 'server-only';
+
+import { createServiceClient } from '@/lib/supabase/service';
 import type { Status } from '@/lib/types';
 
 export interface AuditEntry {
@@ -17,10 +16,8 @@ export interface AuditEntry {
   metadata?: Record<string, unknown>;
 }
 
-export async function writeAudit(
-  supabase: SupabaseClient,
-  entry: AuditEntry,
-): Promise<void> {
+export async function writeAudit(entry: AuditEntry): Promise<void> {
+  const supabase = createServiceClient();
   const { error } = await supabase.from('audit_log').insert({
     submission_id: entry.submission_id,
     actor_id: entry.actor_id,

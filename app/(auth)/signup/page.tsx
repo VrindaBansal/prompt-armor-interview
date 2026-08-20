@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { Button, Field } from "@/components/ui";
+import { Field, PendingButton } from "@/components/ui";
 import { getSessionUser, roleHome } from "@/lib/supabase/auth";
 
 export const metadata = { title: "Create account | ClearPath" };
@@ -20,11 +20,11 @@ export default async function SignupPage({ searchParams }: { searchParams: Promi
       {error ? <div className="mt-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800" role="alert">{error}</div> : null}
 
       <form action="/auth/signup" className="mt-8 grid gap-5" method="post">
-        <Field autoComplete="name" label="Full name" name="full_name" placeholder="Alex Morgan" required />
-        <Field autoComplete="email" label="Work email" name="email" placeholder="name@company.com" required type="email" />
-        <Field autoComplete="new-password" hint="Use at least 8 characters." label="Password" minLength={8} name="password" required type="password" />
+        <Field autoComplete="name" label="Full name" maxLength={120} name="full_name" placeholder="Alex Morgan" required />
+        <Field autoComplete="email" label="Work email" maxLength={320} name="email" placeholder="name@company.com" required type="email" />
+        <Field autoComplete="new-password" hint="Use at least 12 characters." label="Password" maxLength={1024} minLength={12} name="password" required type="password" />
         <label className="flex items-start gap-3 text-sm leading-6 text-slate-600"><input className="mt-1 size-4 shrink-0 rounded border-slate-300 accent-slate-950" name="terms" required type="checkbox" /> <span>I agree to use ClearPath for authorized compliance review work.</span></label>
-        <Button className="mt-1 w-full" size="lg" type="submit">Create account</Button>
+        <PendingButton className="mt-1 w-full" pendingLabel="Creating account…" size="lg" type="submit">Create account</PendingButton>
       </form>
 
       <p className="mt-8 text-center text-sm text-slate-600">Already have an account? <Link className="font-semibold text-slate-950 underline decoration-amber-500 decoration-2 underline-offset-4" href="/login">Sign in</Link></p>

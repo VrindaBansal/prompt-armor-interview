@@ -2,21 +2,32 @@ import type { Role } from "@/lib/types";
 import { roleHome } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
 
-import { authRedirect, formValue } from "../utils";
+import { appUrl, authRedirect, formValue, rawFormValue, rejectCrossOrigin } from "../utils";
 
 export async function POST(request: Request) {
+  const rejected = rejectCrossOrigin(request);
+  if (rejected) return rejected;
+
   const formData = await request.formData();
   const fullName = formValue(formData, "full_name");
   const email = formValue(formData, "email");
-  const password = formValue(formData, "password");
+  const password = rawFormValue(formData, "password");
   const acceptedTerms = formData.get("terms") === "on";
 
-  if (!fullName || !email || password.length < 8 || !acceptedTerms) {
-    return authRedirect(request, "/signup", "Complete every field and use a password of at least 8 characters.");
+  if (
+    !fullName ||
+    fullName.length > 120 ||
+    !email ||
+    email.length > 320 ||
+    password.length < 12 ||
+    password.length > 1024 ||
+    !acceptedTerms
+  ) {
+    return authRedirect(request, "/signup", "Complete every field and use a password of at least 12 characters.");
   }
 
   const supabase = await createClient();
-  const emailRedirectTo = new URL("/auth/callback", request.url).toString();
+  const emailRedirectTo = appUrl("/auth/callback").toString();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,

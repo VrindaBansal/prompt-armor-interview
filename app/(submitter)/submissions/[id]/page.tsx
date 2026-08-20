@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { CommentThread } from "@/components/submission";
-import { Badge, Button, Card, CardContent, CardHeader, StatusPill } from "@/components/ui";
+import { Badge, Card, CardContent, CardHeader, PendingButton, StatusPill } from "@/components/ui";
 import { getSubmissionDetail } from "@/lib/actions/submissions";
 import { requireUser } from "@/lib/supabase/auth";
 import type { Channel, ProductType, SubmissionDetail } from "@/lib/types";
@@ -31,10 +31,10 @@ export default async function SubmissionDetailPage({ params, searchParams }: { p
         <header className="mt-6 flex flex-col gap-6 border-b border-slate-900/10 pb-8 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-3"><StatusPill status={submission.status} />{submission.is_affiliate ? <Badge tone="warning">Affiliate</Badge> : null}</div>
-            <h1 className="mt-4 text-4xl font-semibold tracking-[-0.035em]">{submission.title}</h1>
+            <h1 className="mt-4 break-words text-4xl font-semibold tracking-[-0.035em]">{submission.title}</h1>
             <p className="mt-2 text-sm text-slate-500">{productLabels[submission.product_type]} · {channelLabels[submission.channel]} · Updated {formatter.format(new Date(submission.updated_at))}</p>
           </div>
-          {canSubmit ? <form action={submitExistingForReviewAction}><input name="submission_id" type="hidden" value={submission.id} /><Button size="lg" type="submit">Submit for AI review</Button></form> : null}
+          {canSubmit ? <form action={submitExistingForReviewAction}><input name="submission_id" type="hidden" value={submission.id} /><PendingButton pendingLabel="Screening…" size="lg" type="submit">Submit for AI review</PendingButton></form> : null}
         </header>
 
         {query.screening ? <div className={`mt-6 rounded-md border px-4 py-3 text-sm font-medium ${query.screening === "complete" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-amber-200 bg-amber-50 text-amber-900"}`} role="status">{query.screening === "complete" ? "AI screening completed and the record is ready for review." : "AI screening could not complete. The submission remains saved; try again shortly."}</div> : null}

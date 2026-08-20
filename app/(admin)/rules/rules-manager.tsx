@@ -145,6 +145,8 @@ export function RulesManager({ initialRules }: { initialRules: Rule[] }) {
             label="Code"
             name="rule-code"
             hint="e.g. TILA-APR-CLARITY (auto-uppercased)"
+            maxLength={80}
+            required
             value={form.code}
             onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))}
             disabled={pending}
@@ -177,6 +179,8 @@ export function RulesManager({ initialRules }: { initialRules: Rule[] }) {
             label="Requirement"
             name="rule-description"
             hint="Plain-language rule the AI evaluates copy against."
+            maxLength={2000}
+            required
             rows={3}
             value={form.description}
             onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}

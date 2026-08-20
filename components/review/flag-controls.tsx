@@ -17,16 +17,20 @@ export function FlagControls({
 }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [pendingAgreement, setPendingAgreement] = useState<boolean | null>(null);
   const [pending, startTransition] = useTransition();
 
   function set(value: boolean) {
     setError(null);
+    setPendingAgreement(value);
     startTransition(async () => {
       try {
         await setFlagAgreement(aiCheckId, value);
         router.refresh();
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to save");
+      } finally {
+        setPendingAgreement(null);
       }
     });
   }
@@ -37,6 +41,7 @@ export function FlagControls({
         size="sm"
         variant={agreed === true ? "primary" : "secondary"}
         disabled={pending}
+        loading={pending && pendingAgreement === true}
         aria-pressed={agreed === true}
         onClick={() => set(true)}
       >
@@ -46,6 +51,7 @@ export function FlagControls({
         size="sm"
         variant={agreed === false ? "danger" : "secondary"}
         disabled={pending}
+        loading={pending && pendingAgreement === false}
         aria-pressed={agreed === false}
         onClick={() => set(false)}
       >

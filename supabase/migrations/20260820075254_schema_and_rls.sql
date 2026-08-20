@@ -1,4 +1,4 @@
--- ClearPath schema + RLS (execution-plan.md §4.1, P0.2)
+-- ClearPath schema and row-level security.
 -- 7 tables: profiles, submissions, rules, ai_checks, reviews, comments, audit_log.
 
 -- ── Enums ──────────────────────────────────────────────────────────────────
@@ -26,9 +26,9 @@ create table public.profiles (
   created_at timestamptz not null default now()
 );
 
--- New auth users get a profile automatically. Role can be requested via
--- signup metadata (`role` in raw_user_meta_data); anything not recognized
--- falls back to 'submitter' so a malformed signup can never self-elevate.
+-- New auth users always receive the least-privileged role. Staff roles must be
+-- assigned through a trusted administrative process; signup metadata is never
+-- an authorization source.
 create function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -38,11 +38,7 @@ begin
   insert into public.profiles (id, role, full_name)
   values (
     new.id,
-    case
-      when new.raw_user_meta_data ->> 'role' in ('submitter', 'reviewer', 'admin')
-        then (new.raw_user_meta_data ->> 'role')::public.role
-      else 'submitter'
-    end,
+    'submitter',
     new.raw_user_meta_data ->> 'full_name'
   );
   return new;
@@ -99,8 +95,8 @@ create table public.rules (
 );
 
 -- ── ai_checks ──────────────────────────────────────────────────────────────
--- One row per (submission, applicable rule), written by the trusted
--- /api/compliance-check route using the service-role key.
+-- One row per (submission, applicable rule), written by the trusted server
+-- action using the service-role key.
 
 create table public.ai_checks (
   id uuid primary key default gen_random_uuid(),

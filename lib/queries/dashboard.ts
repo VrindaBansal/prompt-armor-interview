@@ -1,4 +1,4 @@
-// Dashboard query layer (execution-plan.md §4.3, §9 A5). Implements the frozen
+// Dashboard query layer. Implements the frozen
 // getThroughputMetrics contract Agent B's dashboard (B6) consumes.
 //
 // Runs under the caller's RLS-scoped server client. The dashboard page guards

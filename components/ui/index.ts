@@ -4,6 +4,7 @@ export * from "./button";
 export * from "./card";
 export * from "./empty-state";
 export * from "./field";
+export * from "./pending-button";
 export * from "./severity-tag";
 export * from "./spinner";
 export * from "./status-pill";

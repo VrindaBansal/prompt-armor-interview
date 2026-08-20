@@ -21,6 +21,9 @@ export function AppShell({ children, email, fullName, role }: { children: ReactN
 
   return (
     <div className="min-h-screen bg-[#f3f1eb]">
+      <a className="sr-only z-50 rounded-md bg-slate-950 px-4 py-3 text-sm font-semibold text-white focus:fixed focus:left-4 focus:top-4 focus:not-sr-only focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2" href="#main-content">
+        Skip to main content
+      </a>
       <header className="sticky top-0 z-40 border-b border-slate-900/10 bg-[#f3f1eb]/95 backdrop-blur">
         <div className="mx-auto flex max-w-[96rem] items-center justify-between gap-5 px-5 py-4 sm:px-8 lg:px-12">
           <div className="flex min-w-0 items-center gap-5">
@@ -40,7 +43,7 @@ export function AppShell({ children, email, fullName, role }: { children: ReactN
           })}
         </nav>
       </header>
-      {children}
+      <div className="outline-none" id="main-content" tabIndex={-1}>{children}</div>
     </div>
   );
 }

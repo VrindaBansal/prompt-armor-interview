@@ -71,6 +71,9 @@ All demo accounts share the password in `SEED_DEMO_PASSWORD`.
 
 The seed creates 15 submissions across every status, mixing clearly-compliant
 and clearly-violating copy so the queue and dashboard are populated.
+It is idempotent for its reserved `c1ea…` fixture records: rerunning it refreshes
+the six demo users and those fixtures without deleting unrelated users or
+submissions.
 
 ---
 
@@ -83,7 +86,7 @@ and clearly-violating copy so the queue and dashboard are populated.
   boundary, enforced in the database rather than in app code, so role scoping
   holds regardless of which surface calls in. Auth, Postgres, and realtime come
   from one service.
-- **OpenAI** from a **server-only route** — the model is never called from the
+- **OpenAI** from a **server-only action** — the model is never called from the
   browser; the API key never leaves the server.
 - **Tailwind** for a restrained, consistent "regulatory dossier" UI.
 - **Vercel** for deployment, aligned to the Supabase region.
@@ -97,8 +100,7 @@ app/
   (auth)         login / signup / recovery
   (submitter)    intake + my submissions + submission detail
   (reviewer)     queue + review detail
-  (admin)        throughput dashboard
-  api/compliance-check   server route: runs the AI engine
+  (admin)        throughput dashboard + rules management
 components/
   ui             design system (Button, Card, StatusPill, SeverityTag, …)
   review         queue list, flag list, per-flag confirm/override, decision bar
@@ -119,16 +121,18 @@ Seven tables: `profiles`, `submissions`, `rules`, `ai_checks`, `reviews`,
 `comments`, `audit_log`. Enums mirror the TypeScript contract in `lib/types.ts`
 exactly, so the DB and the app cannot drift on status/role/severity values.
 
-### Security model (RLS)
+### Security model
 
-- Submitters see and edit only their own submissions, and only while `draft` or
-  `changes_requested`.
-- Reviewers and admins see the full queue and drive staff/system transitions.
-- `ai_checks` has **no client insert policy** — only the trusted server route
-  (service-role key) writes AI results.
+- New accounts always receive `submitter`; signup metadata cannot request a
+  reviewer or admin role.
+- RLS scopes reads: submitters see only their records, while reviewers and
+  admins see the review workspace.
+- Browser database roles cannot mutate workflow tables. Server actions verify
+  role, ownership, input size, and expected state before trusted writes.
+- OpenAI and Supabase service keys are imported only through server-only
+  modules and never use the `NEXT_PUBLIC_` prefix.
 - `audit_log` is **append-only by construction**: no update/delete policy
-  exists and those privileges are revoked, so history cannot be rewritten by
-  any role.
+  exists and browser mutation privileges are revoked.
 
 ### The AI compliance engine
 
@@ -139,8 +143,9 @@ one flag per applicable rule** via the service-role client.
 The parser is the safety layer: it strips code fences, tolerates either a bare
 array or a wrapped object, clamps confidence, drops malformed entries, and maps
 any unknown or missing verdict to `needs_human` — never a silent pass.
-Unparseable model output degrades to all-`needs_human` rather than crashing the
-route, so a bad model response can never break submission.
+Submission and rule strings are explicitly treated as untrusted model input;
+model output is length-bounded and validated. Unparseable output degrades to
+all-`needs_human` rather than silently passing a rule.
 
 ### State machine
 
@@ -188,8 +193,8 @@ action bypasses the trail.
 - **AI writes advisory flags, never decisions.** The AI never changes a
   submission's status — only a human reviewer decides. This keeps the
   compliance record human-owned.
-- **RLS over app-layer authorization.** Role scoping lives in the database so
-  it cannot be bypassed by a surface that forgets to check.
+- **Defense in depth.** RLS protects reads, database grants deny direct workflow
+  writes, and server actions enforce the state machine before trusted writes.
 - **One flag per applicable rule**, defaulting uncovered rules to
   `needs_human`, so a submission is never left with an applicable rule that has
   no recorded judgment.
@@ -199,6 +204,7 @@ action bypasses the trail.
 ## Local setup
 
 ```bash
+# Node 22+
 npm install
 cp env.example .env.local          # fill in real values
 
@@ -208,16 +214,36 @@ supabase db push
 
 npm run seed                        # demo users + submissions
 npm run dev                         # http://localhost:3000
+npm run lint
+npm run typecheck
+npm run security:audit
 ```
 
 Required env: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
 `SUPABASE_SERVICE_ROLE_KEY` (server-only), `OPENAI_API_KEY` (server-only),
-`NEXT_PUBLIC_SITE_URL`, and `SEED_DEMO_PASSWORD` for the seed. See
+`NEXT_PUBLIC_SITE_URL`, plus `SEED_DEMO_PASSWORD` and `SEED_DEMO_CONFIRM` only
+for local/demo seeding. See
 `env.example`.
+
+### Secret handling
+
+Keep real values only in `.env.local` locally and encrypted deployment
+environment variables remotely; all `.env*`, private-key, and PEM files are
+ignored. The Supabase anon key is intentionally public, but the service-role
+and OpenAI keys are server-only. If either secret is ever pasted into source,
+logs, an issue, or a commit, rotate it immediately—removing the text is not
+enough. Configure provider spend/rate limits and review staff-role assignments
+before launch.
+
+## Repository policy
+
+`README.md` is the repository's only Markdown document. Keep durable project
+documentation here and implementation details beside the relevant code.
 
 ## Deploy
 
-Deploy to Vercel from the repo; set the same env vars (secrets included) in the
-Vercel project, aligning the region with Supabase. After the first deploy, set
-`NEXT_PUBLIC_SITE_URL` to the deployed URL, ensure it is in the Supabase auth
-redirect allowlist, and run the seed against the production database.
+Deploy to Vercel from the repo; set runtime secrets in the Vercel project and
+align its region with Supabase. Set `NEXT_PUBLIC_SITE_URL` to the canonical
+HTTPS URL and add that exact callback URL to the Supabase auth allowlist. Apply
+migrations, provision staff accounts through a trusted administrative process,
+and never run the demo seed against production.

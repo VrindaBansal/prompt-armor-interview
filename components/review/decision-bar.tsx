@@ -11,7 +11,7 @@ import type { Decision } from "@/lib/types";
 
 function fixesToNote(fixes: string[]): string {
   if (fixes.length === 0) return "";
-  return ["Please address the following before resubmitting:", ...fixes.map((f) => `• ${f}`)].join("\n");
+  return ["Please address the following before resubmitting:", ...fixes.map((f) => `• ${f}`)].join("\n").slice(0, 4_000);
 }
 
 export function DecisionBar({
@@ -25,6 +25,7 @@ export function DecisionBar({
   // Seed the note with the AI's concrete fixes; the reviewer edits freely.
   const [notes, setNotes] = useState(() => fixesToNote(suggestedFixes));
   const [error, setError] = useState<string | null>(null);
+  const [pendingDecision, setPendingDecision] = useState<Decision | null>(null);
   const [pending, startTransition] = useTransition();
 
   function decide(decision: Decision) {
@@ -33,6 +34,7 @@ export function DecisionBar({
       setError("Add a note describing the changes needed.");
       return;
     }
+    setPendingDecision(decision);
     startTransition(async () => {
       try {
         await decideReview(submissionId, decision, notes.trim() || undefined);
@@ -40,6 +42,8 @@ export function DecisionBar({
         router.refresh();
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to record decision");
+      } finally {
+        setPendingDecision(null);
       }
     });
   }
@@ -50,6 +54,7 @@ export function DecisionBar({
         label="Reviewer notes"
         name="reviewer-notes"
         hint="Pre-filled with the AI's suggested fixes; edit as needed. Required when requesting changes — carried into the submitter's revision."
+        maxLength={4000}
         rows={Math.max(3, Math.min(10, notes.split("\n").length + 1))}
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
@@ -71,13 +76,13 @@ export function DecisionBar({
         </p>
       ) : null}
       <div className="flex flex-wrap gap-3">
-        <Button variant="primary" loading={pending} onClick={() => decide("approved")}>
+        <Button disabled={pending} variant="primary" loading={pendingDecision === "approved"} onClick={() => decide("approved")}>
           Approve
         </Button>
-        <Button variant="secondary" disabled={pending} onClick={() => decide("changes_requested")}>
+        <Button variant="secondary" disabled={pending} loading={pendingDecision === "changes_requested"} onClick={() => decide("changes_requested")}>
           Request changes
         </Button>
-        <Button variant="danger" disabled={pending} onClick={() => decide("rejected")}>
+        <Button variant="danger" disabled={pending} loading={pendingDecision === "rejected"} onClick={() => decide("rejected")}>
           Reject
         </Button>
       </div>

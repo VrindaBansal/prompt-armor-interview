@@ -20,18 +20,18 @@ export function QueueList({ items }: { items: SubmissionWithFlags[] }) {
             <Card className="transition hover:border-slate-400 focus-visible:ring-2 focus-visible:ring-slate-500">
               <CardContent className="flex flex-wrap items-center gap-x-4 gap-y-3">
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <h3 className="truncate text-base font-semibold tracking-tight text-slate-950">
                       {item.title}
                     </h3>
                     {item.is_affiliate ? <Badge tone="info">Affiliate</Badge> : null}
                   </div>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 break-words text-xs leading-5 text-slate-500">
                     {item.submitter_name ?? "Unknown submitter"} · {item.channel} ·{" "}
                     {item.product_type} · {ageLabel(item.created_at)}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {item.max_severity ? <SeverityTag severity={item.max_severity} /> : null}
                   <Badge tone={item.flag_count > 0 ? "danger" : "success"}>
                     {item.flag_count} {item.flag_count === 1 ? "flag" : "flags"}

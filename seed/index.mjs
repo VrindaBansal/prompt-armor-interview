@@ -1,14 +1,15 @@
 import { createClient } from "@supabase/supabase-js";
-import WebSocket from "ws";
-
-globalThis.WebSocket ??= WebSocket;
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const demoPassword = process.env.SEED_DEMO_PASSWORD;
+const seedConfirmation = process.env.SEED_DEMO_CONFIRM;
 
 if (!url || !serviceKey) throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY.");
 if (!demoPassword || demoPassword.length < 12) throw new Error("SEED_DEMO_PASSWORD must contain at least 12 characters.");
+if (seedConfirmation !== "seed-clearpath-demo") {
+  throw new Error("Set SEED_DEMO_CONFIRM=seed-clearpath-demo before creating demo accounts.");
+}
 
 const supabase = createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
 
@@ -73,7 +74,7 @@ async function ensureUsers() {
 
   for (const person of people) {
     let user = existing.get(person.email);
-    const attributes = { password: demoPassword, email_confirm: true, user_metadata: { full_name: person.fullName, role: person.role } };
+    const attributes = { password: demoPassword, email_confirm: true, user_metadata: { full_name: person.fullName } };
     if (user) {
       const result = await supabase.auth.admin.updateUserById(user.id, attributes);
       if (result.error) throw result.error;
