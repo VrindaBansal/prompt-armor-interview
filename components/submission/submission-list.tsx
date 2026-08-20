@@ -18,7 +18,7 @@ const formatter = new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeSt
 
 export function SubmissionList({ submissions }: { submissions: Submission[] }) {
   if (!submissions.length) {
-    return <EmptyState action={<a className="inline-flex min-h-9 items-center justify-center rounded-md bg-slate-950 px-3 text-xs font-semibold text-white shadow-sm transition hover:bg-slate-800" href="/submissions/new">Create submission</a>} description="Create a structured campaign record to start the compliance review process." eyebrow="Queue ready" title="No submissions yet" />;
+    return <EmptyState action={<Link className="inline-flex min-h-9 items-center justify-center rounded-md bg-slate-950 px-3 text-xs font-semibold text-white shadow-sm transition hover:bg-slate-800" href="/submissions/new">Create submission</Link>} description="Create a structured campaign record to start the compliance review process." eyebrow="Queue ready" title="No submissions yet" />;
   }
 
   return (
@@ -38,10 +38,11 @@ export function SubmissionList({ submissions }: { submissions: Submission[] }) {
               </p>
               <p className="mt-3 line-clamp-2 max-w-3xl text-sm leading-6 text-slate-600">{submission.content}</p>
             </div>
-            <div className="text-left sm:text-right"><p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">Record ID</p><p className="mt-1 font-mono text-xs text-slate-600">{submission.id.slice(0, 8)}</p></div>
+            <Link className="inline-flex min-h-10 items-center justify-center rounded-md border border-slate-300 px-4 text-sm font-semibold text-slate-800 transition hover:border-slate-500 hover:bg-slate-50" href={`/submissions/${submission.id}`}>Open record</Link>
           </CardContent>
         </Card>
       ))}
     </div>
   );
 }
+import Link from "next/link";
