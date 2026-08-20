@@ -11,7 +11,15 @@ import type { CommentActionState } from "@/app/(submitter)/submissions/[id]/acti
 import { addSubmissionCommentAction } from "@/app/(submitter)/submissions/[id]/actions";
 
 const initialState: CommentActionState = { error: null, success: false };
-const dateFormatter = new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC", timeZoneName: "short" });
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
+  timeZone: "UTC",
+  timeZoneName: "short",
+});
 
 function PostButton() {
   const { pending } = useFormStatus();
