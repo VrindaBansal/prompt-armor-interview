@@ -10,6 +10,46 @@ prequal) against TILA/Reg Z, UDAAP, and FTC endorsement rules.
 
 ---
 
+## ▶ Try it in 2 minutes
+
+**Live:** https://prompt-armor-interview-vrindabansals-projects.vercel.app
+
+On the login page, use the **one-click demo sign-in** (Reviewer / Submitter /
+Admin). Or sign in manually — all demo accounts share the same password:
+
+| Role | Email |
+|------|-------|
+| Admin | `admin@clearpath.demo` |
+| Reviewer | `maya.reviewer@clearpath.demo` |
+| Submitter | `alex.submitter@clearpath.demo` |
+
+**The 60-second path (don't wander — this is where the AI moment is):**
+1. **Submitter** → *New submission* → click **Load sample copy (Violating)** →
+   **Submit for AI review**. The status flips to *AI screened* in a few seconds.
+2. **Reviewer** → the queue is sorted worst-first; open the top item. You'll see
+   the copy on the left and the **AI flags** on the right (exact excerpt + rule +
+   fix). **Confirm/override** each, then **Request changes**.
+3. **Admin** → the **dashboard** shows throughput (median queue time, % the AI
+   auto-cleared, AI agreement rate); **Manage rules** shows the editable ruleset.
+
+**Ready-to-paste sample copy** (channel *Advertisement*, product *Personal loan*):
+
+- **Violating** — *"GUARANTEED approval with no credit check! Get cash at just
+  3.9% with absolutely no fees. Everyone qualifies — apply now, this exclusive
+  offer ends tonight!"* (trips TILA APR disclosure, UDAAP guarantee/free, urgency)
+- **Clean** — *"See if you prequalify for a fixed-rate personal loan.
+  Representative APR 12.9%. Checking your eligibility does not affect your credit
+  score. Rates depend on your application; terms and conditions apply."*
+- **Borderline** — *"A personal loan could lower your monthly payment. Many
+  customers use one to consolidate higher-interest debt. Your actual rate, term,
+  and savings depend on your approved offer."*
+
+The seeded data already has a flagged item waiting in the reviewer queue, a
+clean item the AI auto-cleared, and confirmed/overridden flags so the dashboard
+shows believable numbers.
+
+---
+
 ## The problem and the thesis
 
 A compliance reviewer is the bottleneck. Marketing copy arrives over email in

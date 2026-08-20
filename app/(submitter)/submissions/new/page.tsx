@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { SubmissionForm } from "@/components/submission";
+import { DemoSampleCopy, SubmissionForm } from "@/components/submission";
 
 import { createSubmissionAction } from "./actions";
 
@@ -8,6 +8,7 @@ export const metadata = { title: "New submission | ClearPath" };
 
 export default async function NewSubmissionPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams;
+  const demoMode = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
   return (
     <main className="min-h-screen bg-[#f3f1eb] px-5 py-10 text-slate-950 sm:px-8 lg:px-12">
       <div className="mx-auto max-w-4xl">
@@ -17,6 +18,7 @@ export default async function NewSubmissionPage({ searchParams }: { searchParams
           <h1 className="mt-3 text-4xl font-semibold tracking-[-0.035em]">Put the complete claim on record.</h1>
           <p className="mt-3 text-sm leading-6 text-slate-600">Clear context gives the automated screen and human reviewer the same source of truth.</p>
         </header>
+        {demoMode ? <DemoSampleCopy /> : null}
         <SubmissionForm action={createSubmissionAction} error={error} />
       </div>
     </main>

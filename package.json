@@ -12,7 +12,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit --incremental false",
     "security:audit": "npm audit --audit-level=high",
-    "seed": "node --env-file=.env.local seed/index.mjs"
+    "seed": "node --env-file=.env.local seed/index.mjs",
+    "setup": "supabase db push && npm run seed"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

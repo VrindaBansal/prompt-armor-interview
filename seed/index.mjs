@@ -38,6 +38,7 @@ const submissionFixtures = [
   ["13", "submitter3", "Lower-payment mortgage ad", "ad", "mortgage_prequal", false, "changes_requested", "Cut your mortgage payment in half with our guaranteed 3% rate and $900 monthly payment."],
   ["14", "submitter3", "Organic card review", "social", "credit_card", true, "rejected", "Five stars! I am a regular customer and definitely was not paid to say this is the best card for everyone."],
   ["15", "submitter3", "Home loan partner roundup", "affiliate_landing", "mortgage_prequal", true, "ai_screened", "These mortgage partners guarantee the lowest payment. Click any offer to qualify immediately."],
+  ["16", "submitter2", "Fixed-rate loan eligibility check", "ad", "personal_loan", false, "ai_screened", "See if you prequalify for a fixed-rate personal loan. Representative APR 12.9%. Checking your eligibility does not affect your credit score. Rates depend on your application; terms and conditions apply."],
 ];
 
 const issueBySubmission = {
