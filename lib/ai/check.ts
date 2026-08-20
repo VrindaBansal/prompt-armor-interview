@@ -41,6 +41,7 @@ export async function runComplianceCheck(
   const { data: allRules, error: rulesErr } = await supabase
     .from('rules')
     .select('*')
+    .eq('is_active', true) // deactivated rules (feature 13) never screen
     .returns<Rule[]>();
   if (rulesErr || !allRules) {
     throw new Error('Failed to load rules');

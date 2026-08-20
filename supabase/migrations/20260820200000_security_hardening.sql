@@ -76,6 +76,19 @@ alter table public.ai_checks
   )
   not valid;
 
+alter table public.rules
+  add constraint rules_code_format
+  check (
+    char_length(code) between 1 and 80
+    and code ~ '^[A-Z0-9]+(-[A-Z0-9]+)*$'
+  )
+  not valid;
+
+alter table public.rules
+  add constraint rules_description_length
+  check (char_length(btrim(description)) between 1 and 2000)
+  not valid;
+
 alter table public.audit_log
   add constraint audit_log_action_length
   check (char_length(btrim(action)) between 1 and 100)

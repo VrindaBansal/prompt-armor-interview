@@ -77,6 +77,25 @@ submissions.
 
 ---
 
+## Five-minute demo
+
+1. Sign in as `alex.submitter@clearpath.demo`, create an affiliate landing-page
+   submission for a personal loan, and submit deliberately risky copy such as
+   “Guaranteed approval—4.9% with no fees.” The item should move from AI
+   screening to `ai_screened`.
+2. Sign in as `maya.reviewer@clearpath.demo`, open the highest-severity queue
+   item, inspect the cited excerpts and suggested fixes, confirm or override a
+   flag, then request changes. This demonstrates that AI performs the first
+   pass while the reviewer owns the decision.
+3. Sign in as `admin@clearpath.demo`, verify the throughput dashboard, then open
+   **Manage rules**. Add or edit a rule and toggle it inactive; inactive rules
+   remain visible for history but are excluded from the next AI screening.
+
+If the live model call is slow, use a pre-seeded flagged item. If the queue or
+dashboard is empty, run `npm run seed` against a non-production environment.
+
+---
+
 ## Stack and why
 
 - **Next.js (App Router) + TypeScript** — server components and server actions
@@ -100,7 +119,7 @@ app/
   (auth)         login / signup / recovery
   (submitter)    intake + my submissions + submission detail
   (reviewer)     queue + review detail
-  (admin)        throughput dashboard
+  (admin)        throughput dashboard + rules management
 components/
   ui             design system (Button, Card, StatusPill, SeverityTag, …)
   review         queue list, flag list, per-flag confirm/override, decision bar
@@ -178,14 +197,18 @@ action bypasses the trail.
 | 10 | Per-flag confirm / override | L2 / C1 |
 | 11 | Suggested fixes into the changes note | L2 |
 | 12 | Throughput dashboard | proof of impact |
+| 13 | Rules management (admin CRUD + activate/deactivate) | L2 |
 | — | Append-only audit trail | C1 |
 
 ---
 
 ## Scope decisions
 
-- **Rules are seeded reference data**, not a management UI. A rules-admin
-  screen was scoped out as a stretch; the engine reads the seeded ruleset.
+- **Rules are data, not code.** The ruleset ships as a seed migration, and an
+  admin can manage it in-app (add / edit / activate / deactivate) — deactivated
+  rules stop screening immediately and new rules apply to the next submission,
+  with no redeploy. Rule-change history is not yet audited (the audit log is
+  submission-scoped) — a natural next step.
 - **AI writes advisory flags, never decisions.** The AI never changes a
   submission's status — only a human reviewer decides. This keeps the
   compliance record human-owned.

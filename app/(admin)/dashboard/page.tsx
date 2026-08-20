@@ -26,12 +26,20 @@ export default async function DashboardShellPage() {
           </div>
           <div className="flex flex-col items-stretch gap-3 sm:items-end">
             <span className="inline-flex items-center gap-2 self-start text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500 sm:self-auto"><span aria-hidden className="size-2 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,.12)]" />Live audit data</span>
-            <Link
-              href="/queue"
-              className="inline-flex min-h-11 items-center justify-center rounded-md bg-slate-950 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2"
-            >
-              Open review queue
-            </Link>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="/rules"
+                className="inline-flex min-h-11 items-center justify-center rounded-md border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-900 shadow-sm transition hover:border-slate-400 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2"
+              >
+                Manage rules
+              </Link>
+              <Link
+                href="/queue"
+                className="inline-flex min-h-11 items-center justify-center rounded-md bg-slate-950 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2"
+              >
+                Open review queue
+              </Link>
+            </div>
           </div>
         </header>
 
