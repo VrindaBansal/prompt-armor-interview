@@ -100,7 +100,7 @@ app/
   (auth)         login / signup / recovery
   (submitter)    intake + my submissions + submission detail
   (reviewer)     queue + review detail
-  (admin)        throughput dashboard + rules management
+  (admin)        throughput dashboard + rules and user management
 components/
   ui             design system (Button, Card, StatusPill, SeverityTag, …)
   review         queue list, flag list, per-flag confirm/override, decision bar

@@ -25,7 +25,25 @@ export interface Profile {
   id: string;
   role: Role;
   full_name: string | null;
+  deleted_at: string | null;
   created_at: string;
+}
+
+export interface ManagedUser {
+  id: string;
+  email: string;
+  full_name: string;
+  role: Role;
+  created_at: string;
+  email_confirmed: boolean;
+  last_sign_in_at: string | null;
+}
+
+export interface ManagedUserInput {
+  email: string;
+  full_name: string;
+  role: Role;
+  password?: string;
 }
 
 export interface Submission {

@@ -10,7 +10,7 @@ import { cn } from "./utils";
 const navigation: Record<Role, Array<{ href: string; label: string }>> = {
   submitter: [{ href: "/submissions", label: "My submissions" }, { href: "/submissions/new", label: "New request" }],
   reviewer: [{ href: "/queue", label: "Review queue" }],
-  admin: [{ href: "/dashboard", label: "Dashboard" }, { href: "/queue", label: "Review queue" }],
+  admin: [{ href: "/dashboard", label: "Dashboard" }, { href: "/queue", label: "Review queue" }, { href: "/rules", label: "Rules" }, { href: "/users", label: "Users" }],
 };
 
 const roleLabels: Record<Role, string> = { submitter: "Submitter", reviewer: "Reviewer", admin: "Administrator" };

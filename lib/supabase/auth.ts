@@ -25,7 +25,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     .eq('id', user.id)
     .single();
 
-  if (!profile) return null;
+  if (!profile || profile.deleted_at) return null;
   return { id: user.id, email: user.email ?? null, profile: profile as Profile };
 }
 
