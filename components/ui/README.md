@@ -12,6 +12,7 @@ ClearPath uses a restrained **regulatory dossier** aesthetic: ink-dark actions, 
 - `Field`, `TextArea`, `Select` — require `label` and `name`; support `hint` and `error`.
 - `EmptyState` — requires `title` and `description`; accepts `eyebrow` and an `action` node.
 - `Spinner` — accepts an accessible `label`.
+- `AppShell` — persistent role-aware navigation and account controls for protected route groups.
 
 Import public components from `@/components/ui`. Avoid deep imports so the implementation can evolve without changing consumers.
 
