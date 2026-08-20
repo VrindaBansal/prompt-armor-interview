@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import type { Channel, ProductType, Submission } from "@/lib/types";
-import { Card, CardContent, EmptyState, StatusPill } from "@/components/ui";
+import { Card, CardContent, EmptyState, LocalDateTime, StatusPill } from "@/components/ui";
 
 const channelLabels: Record<Channel, string> = {
   ad: "Advertisement",
@@ -15,8 +15,6 @@ const productLabels: Record<ProductType, string> = {
   credit_card: "Credit card",
   mortgage_prequal: "Mortgage prequalification",
 };
-
-const formatter = new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" });
 
 export function SubmissionList({ submissions }: { submissions: Submission[] }) {
   if (!submissions.length) {
@@ -36,7 +34,7 @@ export function SubmissionList({ submissions }: { submissions: Submission[] }) {
               <p className="mt-2 flex flex-wrap gap-x-2 text-xs text-slate-500">
                 <span>{productLabels[submission.product_type]}</span><span aria-hidden>·</span>
                 <span>{channelLabels[submission.channel]}</span><span aria-hidden>·</span>
-                <span>Updated {formatter.format(new Date(submission.updated_at))}</span>
+                <span>Updated <LocalDateTime value={submission.updated_at} /></span>
               </p>
               <p className="mt-3 line-clamp-2 max-w-3xl text-sm leading-6 text-slate-600">{submission.content}</p>
             </div>

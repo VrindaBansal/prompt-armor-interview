@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { CommentThread } from "@/components/submission";
-import { Badge, Card, CardContent, CardHeader, PendingButton, StatusPill } from "@/components/ui";
+import { Badge, Card, CardContent, CardHeader, LocalDateTime, PendingButton, StatusPill } from "@/components/ui";
 import { getSubmissionDetail } from "@/lib/actions/submissions";
 import { requireUser } from "@/lib/supabase/auth";
 import type { Channel, ProductType, SubmissionDetail } from "@/lib/types";
@@ -11,8 +11,6 @@ import { submitExistingForReviewAction } from "./actions";
 
 const channelLabels: Record<Channel, string> = { ad: "Advertisement", email: "Email", affiliate_landing: "Affiliate landing page", social: "Social media" };
 const productLabels: Record<ProductType, string> = { personal_loan: "Personal loan", credit_card: "Credit card", mortgage_prequal: "Mortgage prequalification" };
-const formatter = new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" });
-
 export default async function SubmissionDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ screening?: string }> }) {
   const [{ id }, query, user] = await Promise.all([params, searchParams, requireUser(["submitter"])]);
   let submission: SubmissionDetail;
@@ -32,7 +30,7 @@ export default async function SubmissionDetailPage({ params, searchParams }: { p
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-3"><StatusPill status={submission.status} />{submission.is_affiliate ? <Badge tone="warning">Affiliate</Badge> : null}</div>
             <h1 className="mt-4 break-words text-4xl font-semibold tracking-[-0.035em]">{submission.title}</h1>
-            <p className="mt-2 text-sm text-slate-500">{productLabels[submission.product_type]} · {channelLabels[submission.channel]} · Updated {formatter.format(new Date(submission.updated_at))}</p>
+            <p className="mt-2 text-sm text-slate-500">{productLabels[submission.product_type]} · {channelLabels[submission.channel]} · Updated <LocalDateTime value={submission.updated_at} /></p>
           </div>
           {canSubmit ? <form action={submitExistingForReviewAction}><input name="submission_id" type="hidden" value={submission.id} /><PendingButton pendingLabel="Screening…" size="lg" type="submit">Submit for AI review</PendingButton></form> : null}
         </header>
