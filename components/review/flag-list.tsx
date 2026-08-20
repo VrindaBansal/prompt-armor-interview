@@ -1,8 +1,12 @@
-// Read-only AI flag display (A3). Renders each ai_check with its rule citation,
-// highlighted excerpt, explanation, and suggested fix. Confirm/override controls
-// are added in A4 (components/review/flag-controls).
+// AI flag display (A3 + A4). Renders each ai_check with its rule citation,
+// highlighted excerpt, explanation, and suggested fix, plus a per-flag
+// confirm/override control (A4) on the flags that call for a human judgment.
 import { Badge, Card, CardContent, SeverityTag } from "@/components/ui";
+import { FlagControls } from "./flag-controls";
 import type { AiCheckWithRule, Verdict } from "@/lib/types";
+
+// Flags where the reviewer's agreement is meaningful (a raised concern).
+const NEEDS_JUDGMENT: Verdict[] = ["fail", "needs_human"];
 
 const verdictOrder: Record<Verdict, number> = { fail: 0, needs_human: 1, pass: 2 };
 const verdictMeta: Record<Verdict, { label: string; tone: "danger" | "warning" | "success" }> = {
@@ -66,6 +70,12 @@ export function FlagList({ checks }: { checks: AiCheckWithRule[] }) {
                     <span className="font-semibold">Suggested fix: </span>
                     {check.suggested_fix}
                   </p>
+                ) : null}
+
+                {NEEDS_JUDGMENT.includes(check.verdict) ? (
+                  <div className="border-t border-slate-100 pt-3">
+                    <FlagControls aiCheckId={check.id} agreed={check.agreed} />
+                  </div>
                 ) : null}
               </CardContent>
             </Card>
