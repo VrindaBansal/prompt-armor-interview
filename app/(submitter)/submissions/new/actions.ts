@@ -43,5 +43,5 @@ export async function createSubmissionAction(formData: FormData) {
   }
 
   revalidatePath("/submissions");
-  redirect(`/submissions?created=${intent === "submit" ? "submitted" : "draft"}&id=${submissionId}`);
+  redirect(intent === "submit" ? `/submissions/${submissionId}?screening=complete` : `/submissions?created=draft&id=${submissionId}`);
 }
